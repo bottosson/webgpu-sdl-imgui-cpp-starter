@@ -1,0 +1,11 @@
+[submodule "third-party/imgui"]
+	path = third-party/imgui
+	url = https://github.com/ocornut/imgui
+[submodule "third-party/sdl"]
+	path = third-party/sdl
+	url = https://github.com/libsdl-org/SDL
+	branch = sdl2
+[submodule "third-party/dawn"]
+	path = third-party/dawn
+	url = https://github.com/hexops/dawn
+	branch = "generated-2022-08-06"
