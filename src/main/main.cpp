@@ -1,7 +1,6 @@
 #include <stdio.h>
 
 #include "shaderPaths.h"
-#include <d3d11.h>
 #include <imgui.h>
 #include <backends/imgui_impl_sdl.h>
 #include <backends/imgui_impl_wgpu.h>
@@ -10,6 +9,10 @@
 #include <webgpu/webgpu_cpp.h>
 #include <filesystem>
 #include <fstream>
+
+#if defined(__MACOSX__)
+#include <SDL_metal.h>
+#endif // defined(__MACOSX__)
 
 static void OnUnhandledWgpuError(WGPUErrorType errorType, const char* message, void*)
 {
@@ -144,8 +147,14 @@ struct WebGpuData
     wgpu::Surface surface;
     wgpu::SwapChain swapChain;
 
-    static WebGpuData Create(HWND hWnd, HINSTANCE hInstance, int width, int height);
+#if defined(__MACOSX__)
+    SDL_MetalView sdlMetalView;
+#endif
+    
+    static WebGpuData Create(SDL_Window& window, int width, int height);
     bool CreateSwapChain(int width, int height);
+    
+
 };
 
 bool WebGpuData::CreateSwapChain(int width, int height)
@@ -165,7 +174,7 @@ bool WebGpuData::CreateSwapChain(int width, int height)
     return (bool)swapChain;
 }
 
-WebGpuData WebGpuData::Create(HWND hWnd, HINSTANCE hInstance, int width, int height)
+WebGpuData WebGpuData::Create(SDL_Window& window, int width, int height)
 {
     WebGpuData data;
 
@@ -186,10 +195,21 @@ WebGpuData WebGpuData::Create(HWND hWnd, HINSTANCE hInstance, int width, int hei
 
     data.device.SetUncapturedErrorCallback(OnUnhandledWgpuError, nullptr);
 
+#if defined(__WINDOWS__)
+    SDL_SysWMinfo wmInfo;
+    SDL_VERSION(&wmInfo.version);
+    SDL_GetWindowWMInfo(&window, &wmInfo);
+    
     wgpu::SurfaceDescriptorFromWindowsHWND windowsDesc;
-    windowsDesc.hwnd = hWnd;
-    windowsDesc.hinstance = hInstance;
-
+    windowsDesc.hwnd = wmInfo.info.win.window;
+    windowsDesc.hinstance = wmInfo.info.win.hinstance;
+    
+#elif defined(__MACOSX__)
+    data.sdlMetalView = SDL_Metal_CreateView(&window);
+    wgpu::SurfaceDescriptorFromMetalLayer windowsDesc;
+    windowsDesc.layer = SDL_Metal_GetLayer(data.sdlMetalView);
+#endif
+    
     wgpu::SurfaceDescriptor surfaceDesc;
     surfaceDesc.nextInChain = &windowsDesc;
     data.surface = data.instance.CreateSurface(&surfaceDesc);
@@ -216,13 +236,15 @@ int main(int argc, char** argv)
     SDL_SysWMinfo wmInfo;
     SDL_VERSION(&wmInfo.version);
     SDL_GetWindowWMInfo(window, &wmInfo);
+    
+#if defined(__WINDOWS__)
     HWND hwnd = (HWND)wmInfo.info.win.window;
+#endif // defined(__WINDOWS__)
 
     int w, h;
-    SDL_GetWindowSize(window, &w, &h);
-
+    SDL_GL_GetDrawableSize(window, &w, &h);
     {
-        WebGpuData webGpuData = WebGpuData::Create(hwnd, wmInfo.info.win.hinstance, w, h);
+        WebGpuData webGpuData = WebGpuData::Create(*window, w, h);
         if (!webGpuData.swapChain)
         {
             return 1;
@@ -294,7 +316,11 @@ int main(int argc, char** argv)
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGui::StyleColorsDark();
+#if defined(__WINDOWS__)
         ImGui_ImplSDL2_InitForD3D(window);
+#elif defined(__MACOSX__)
+        ImGui_ImplSDL2_InitForMetal(window);
+#endif
         ImGui_ImplWGPU_Init(webGpuData.device.Get(), 3, WGPUTextureFormat_BGRA8Unorm, WGPUTextureFormat_Undefined);
 
         float colorA[] = { 1.f,0.f,0.f };
@@ -315,7 +341,7 @@ int main(int argc, char** argv)
                 if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED && event.window.windowID == SDL_GetWindowID(window))
                 {
                     int w, h;
-                    SDL_GetWindowSize(window, &w, &h);
+                    SDL_GL_GetDrawableSize(window, &w, &h);
 
                     ImGui_ImplWGPU_InvalidateDeviceObjects();
                     webGpuData.CreateSwapChain(w, h);
@@ -359,14 +385,14 @@ int main(int argc, char** argv)
                 pass.SetPipeline(simpleRenderPipeline);
                 pass.SetVertexBuffer(0, vertexBuffer);
                 pass.Draw(3, 1, 0, 0);
-
+                
                 ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), pass.Get());
                 pass.End();
 
                 wgpu::CommandBufferDescriptor commandBufferDesc = {};
                 wgpu::CommandBuffer commandBuffer = encoder.Finish(&commandBufferDesc);
                 wgpu::Queue queue = wgpuDeviceGetQueue(webGpuData.device.Get());
-
+                
                 float vertexData[] =
                 {
                     -0.8f, -0.8f, colorA[0], colorA[1], colorA[2],
@@ -374,7 +400,7 @@ int main(int argc, char** argv)
                     -0.0f,  0.8f, colorC[0], colorC[1], colorC[2],
                 };
                 queue.WriteBuffer(vertexBuffer, 0, vertexData, sizeof(vertexData));
-
+                
                 queue.Submit(1, &commandBuffer);
 
                 webGpuData.swapChain.Present();
@@ -384,6 +410,16 @@ int main(int argc, char** argv)
         ImGui_ImplWGPU_Shutdown();
         ImGui_ImplSDL2_Shutdown();
         ImGui::DestroyContext();
+        
+#if defined(__MACOSX__)
+        SDL_MetalView metalView = webGpuData.sdlMetalView;
+#endif
+        
+        webGpuData = {};
+
+#if defined(__MACOSX__)
+        SDL_Metal_DestroyView(metalView);
+#endif
     }
     
     SDL_DestroyWindow(window);
