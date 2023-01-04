@@ -58,13 +58,15 @@ filter "system:macosx"
       "sdl/src/*/darwin/*.h",
       "sdl/src/*/darwin/*.c",
       "sdl/src/*/darwin/*.m",
-      "sdl/src/thread/pthread/*.h", 
-      "sdl/src/thread/pthread/*.c",
       "sdl/src/loadso/dlopen/*.h",
       "sdl/src/loadso/dlopen/*.c",
+      "sdl/src/sensor/dummy/*.h",
+      "sdl/src/sensor/dummy/*.c",
       "sdl/src/joystick/iphoneos/*.h", 
       "sdl/src/joystick/iphoneos/*.c",
       "sdl/src/joystick/iphoneos/*.m",
+      "sdl/src/thread/pthread/*.h", 
+      "sdl/src/thread/pthread/*.c",
    }
    defines {       
       "SDL_VIDEO_RENDER_OGL=0",  
