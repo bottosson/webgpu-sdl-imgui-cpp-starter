@@ -6,7 +6,7 @@ project "Main"
          "MultiProcessorCompile"
       }
 
-      io.writefile("local/gen/main/shaderPaths.h",[[
+      io.writefile("../../local/gen/main/shaderPaths.h",[[
          #pragma once
          // This file is generated from Premake. Edits will be overwritten
          #include <SDL_platform.h>
