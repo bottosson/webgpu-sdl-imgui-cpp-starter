@@ -4,7 +4,7 @@
 [submodule "third-party/sdl"]
 	path = third-party/sdl
 	url = https://github.com/libsdl-org/SDL
-	branch = sdl2
+	branch = SDL2
 [submodule "third-party/dawn"]
 	path = third-party/dawn
 	url = https://github.com/hexops/dawn
