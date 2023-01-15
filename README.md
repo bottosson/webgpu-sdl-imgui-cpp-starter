@@ -1,4 +1,4 @@
-This is a quick example of using Dear ImGui, SDL and the Dawn WebGPU implementation together. I created this to be able to experiment with using WebGPU as native graphics API. Despite its name, WebGPU is showing a lot of promise as a simple native graphics API, but there aren't that many examples around for quickly getting started with WebGpu and C++.
+This is a quick example of using Dear ImGui, SDL and the Dawn WebGPU implementation together with a custom premake build script. I created this to be able to experiment with using WebGPU as native graphics API. Despite its name, WebGPU is showing a lot of promise as a simple native graphics API, but there aren't that many examples around for quickly getting started with WebGPU and C++.
 
 Higlights:
 - If you have Windows and Visual Studio 2022 or Mac OS X and XCode, all you should need to get started is this repo (but no promises it will work for your particular configuration).
