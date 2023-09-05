@@ -8,4 +8,4 @@
 [submodule "third-party/dawn"]
 	path = third-party/dawn
 	url = https://github.com/hexops/dawn
-	branch = "generated-2022-08-06"
+	branch = generated-2023-08-10.1691685418
