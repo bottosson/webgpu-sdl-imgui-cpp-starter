@@ -26,8 +26,8 @@ project "ImGui"
          "imgui/*.cpp",
          "imgui/backends/imgui_impl_wgpu.h", 
          "imgui/backends/imgui_impl_wgpu.cpp",
-         "imgui/backends/imgui_impl_sdl.h",  
-         "imgui/backends/imgui_impl_sdl.cpp",  
+         "imgui/backends/imgui_impl_sdl2.h",  
+         "imgui/backends/imgui_impl_sdl2.cpp",  
       }
 
       filter "system:macosx"
